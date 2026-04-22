@@ -3,121 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>주식 야수 지수 테스트</title>
+    <title>오늘의 운명 메뉴</title>
     <style>
-        :root { --primary: #4cd964; --bg: #0b0b0b; --card: #1c1c1e; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 100%; max-width: 450px; background: var(--card); padding: 30px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
-        
-        /* 상단 진행도 바 */
-        .progress-container { width: 100%; height: 6px; background: #333; border-radius: 10px; margin-bottom: 30px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--primary); width: 10%; transition: 0.4s ease; }
-        .step-text { font-size: 13px; color: var(--primary); font-weight: bold; margin-bottom: 10px; display: block; }
-
-        h2 { font-size: 22px; line-height: 1.4; margin-bottom: 30px; min-height: 60px; }
-        
-        .btn-group button { 
-            display: block; width: 100%; padding: 18px; margin-bottom: 12px;
-            background: #2c2c2e; color: white; border: 1px solid #3a3a3c; border-radius: 15px; 
-            font-size: 16px; cursor: pointer; transition: 0.2s; text-align: left;
+        /* 밝고 따뜻한 식욕을 돋우는 테마 */
+        :root { 
+            --primary: #FF6B6B; 
+            --secondary: #FFA502; 
+            --bg: #FFF9EE; 
+            --card: #FFFFFF; 
+            --text-main: #2D3436; 
+            --text-sub: #636E72; 
         }
-        .btn-group button:hover { background: #3a3a3c; border-color: var(--primary); }
-        .btn-group button:active { transform: scale(0.98); background: var(--primary); color: black; }
-
-        #result-page { display: none; text-align: center; }
-        .result-title { font-size: 18px; color: #8e8e93; margin-bottom: 10px; }
-        .result-name { font-size: 32px; font-weight: 800; color: var(--primary); margin-bottom: 20px; }
-        .result-desc { line-height: 1.7; color: #d1d1d6; margin-bottom: 30px; word-break: keep-all; }
+        body { 
+            background: var(--bg); 
+            color: var(--text-main); 
+            font-family: 'Pretendard', -apple-system, sans-serif; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            background-image: radial-gradient(#ffeaa7 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .container { width: 90%; max-width: 420px; padding: 20px 0; }
         
-        .restart-btn { background: var(--primary); color: black; font-weight: bold; border: none; padding: 15px 30px; border-radius: 12px; cursor: pointer; width: 100%; font-size: 16px; }
+        .quiz-card { 
+            background: var(--card); 
+            padding: 40px 30px; 
+            border-radius: 35px; 
+            box-shadow: 0 15px 35px rgba(255, 107, 107, 0.1); 
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); 
+        }
+        .fade-out { opacity: 0; transform: translateY(20px); }
+        .fade-in { opacity: 1; transform: translateY(0); }
+
+        /* 진행 바 */
+        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .step-badge { 
+            background: #FFEAA7; color: #D35400; font-weight: 900; 
+            padding: 5px 12px; border-radius: 20px; font-size: 14px; 
+        }
+        .progress-bar { flex-grow: 1; height: 8px; background: #F1F2F6; border-radius: 10px; margin-left: 15px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(to right, var(--secondary), var(--primary)); width: 0%; transition: 0.4s ease-out; }
+
+        .q-text { font-size: 22px; font-weight: 800; line-height: 1.4; margin-bottom: 30px; word-break: keep-all; }
+        
+        /* 옵션 버튼 (밝고 입체적으로) */
+        .opt-btn { 
+            display: flex; align-items: center; width: 100%; padding: 18px 20px; margin-bottom: 15px;
+            background: #F8F9FA; color: var(--text-main); border: 2px solid transparent; border-radius: 20px;
+            font-size: 16px; font-weight: 600; text-align: left; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        .opt-btn:hover { border-color: var(--primary); background: #FFF5F5; transform: translateY(-3px); box-shadow: 0 8px 15px rgba(255, 107, 107, 0.15); }
+        .opt-icon { font-size: 24px; margin-right: 15px; }
+
+        /* 결과 창 */
+        #result-page { display: none; text-align: center; }
+        .food-image { 
+            width: 100%; height: 220px; border-radius: 25px; object-fit: cover; 
+            margin-bottom: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+            background-color: #eee;
+        }
+        .result-sub { font-size: 14px; color: var(--primary); font-weight: 800; margin-bottom: 5px; }
+        .result-name { font-size: 32px; font-weight: 900; margin-bottom: 15px; color: var(--text-main); }
+        .result-desc { color: var(--text-sub); line-height: 1.6; font-size: 15px; margin-bottom: 25px; padding: 0 10px; }
+        .menu-suggestion { 
+            background: linear-gradient(135deg, #FF9FF3, #FF6B6B); 
+            color: white; padding: 15px; border-radius: 18px; font-size: 18px; font-weight: bold; margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+        .restart-btn { 
+            background: #F1F2F6; color: var(--text-sub); border: none; padding: 12px 25px; 
+            border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; 
+        }
+        .restart-btn:hover { background: #DFE4EA; color: var(--text-main); }
     </style>
 </head>
 <body>
 
-    <div class="container" id="quiz-page">
-        <span class="step-text" id="step-count">질문 1 / 10</span>
-        <div class="progress-container"><div class="progress-fill" id="progress"></div></div>
-        <h2 id="question">질문을 불러오는 중...</h2>
-        <div class="btn-group" id="buttons">
-            </div>
+<div class="container">
+    <div id="quiz-page" class="quiz-card">
+        <div class="progress-header">
+            <div class="step-badge" id="step-info">Q 01</div>
+            <div class="progress-bar"><div class="progress-fill" id="fill"></div></div>
+        </div>
+        <div id="question" class="q-text">질문을 불러오는 중입니다...</div>
+        <div id="options"></div>
     </div>
 
-    <div class="container" id="result-page">
-        <p class="result-title">나의 투자 성향은?</p>
-        <h1 class="result-name" id="res-name">분석 중...</h1>
+    <div id="result-page" class="quiz-card">
+        <img id="res-img" class="food-image" src="" alt="음식 사진">
+        <div class="result-sub">당신을 위한 완벽한 처방</div>
+        <h1 class="result-name" id="res-title">분석 완료</h1>
         <p class="result-desc" id="res-desc"></p>
-        <button class="restart-btn" onclick="location.reload()">다시 테스트하기</button>
+        <div class="menu-suggestion" id="menu-tip">🍽️ 추천 메뉴</div>
+        <button class="restart-btn" onclick="location.reload()">🔄 다른 메뉴 찾아보기</button>
     </div>
+</div>
 
-    <script>
-        const questions = [
-            { q: "내 통장에 여유자금 1,000만 원이 생겼다!", a: ["일단 예금에 넣고 고민한다", "삼전 같은 대량주를 조금 산다", "신성이엔지 등 유망주에 풀배팅한다"], s: [10, 30, 50] },
-            { q: "사자마자 주가가 -5% 하락했다. 나의 반응은?", a: ["밤에 잠이 안 온다", "이유를 찾아보며 차트를 본다", "바겐세일이다! 추매 가즈아"], s: [10, 30, 50] },
-            { q: "친구들이 '이거 무조건 간다'며 정보를 줬다.", a: ["무시하고 하던 거 한다", "소액만 재미로 사본다", "대출 영끌해서 일단 태운다"], s: [10, 30, 50] },
-            { q: "나의 주식 어플 확인 빈도는?", a: ["장 끝날 때 한 번 본다", "밥 먹을 때 한 번 본다", "눈 떠서 감을 때까지 본다"], s: [10, 30, 50] },
-            { q: "수익이 20% 났다. 이때 나는?", a: ["무서워서 일단 익절한다", "목표가까지 홀딩한다", "내 판단이 맞았다며 더 산다"], s: [10, 30, 50] },
-            { q: "뉴스에서 '경제 위기'라고 난리가 났다.", a: ["모든 주식을 팔고 현금화한다", "우량주 위주로 포트폴리오 변경", "위기는 기회! 인버스나 급등주 찾기"], s: [10, 30, 50] },
-            { q: "주식 관련 유튜브를 볼 때 나는?", a: ["워렌 버핏의 가치투자 강의", "차트 분석 및 기법 강의", "상한가 종목 맞추기 방송"], s: [10, 30, 50] },
-            { q: "로또 1등에 당첨된다면?", a: ["강남 아파트를 산다", "반은 예금, 반은 주식", "전액 주식으로 굴려 재벌을 꿈꾼다"], s: [10, 30, 50] },
-            { q: "내가 생각하는 주식이란?", a: ["차곡차곡 모으는 저축", "성장하는 기업에 대한 투자", "인생 한 방을 위한 승부처"], s: [10, 30, 50] },
-            { q: "상한가 간 종목을 놓쳤을 때 기분은?", a: ["내 거 아니네 하고 넘긴다", "아쉬워서 배가 아프다", "잠을 못 자고 다음 타자를 찾는다"], s: [10, 30, 50] }
-        ];
+<script>
+    const questions = [
+        { q: "🎨 오늘 당신의 감정을 색깔로 표현한다면?", a: ["타오르는 선명한 레드", "차분하고 깊은 딥블루", "상큼한 파스텔 옐로우"], i: ["🔴", "🔵", "🟡"], s: [10, 30, 50] },
+        { q: "👅 지금 당신의 혀는 무엇을 기다리고 있나요?", a: ["짜릿하고 땀나는 강렬한 자극", "부드럽고 포근한 따뜻한 위로", "아삭아삭 신선하고 가벼운 리듬"], i: ["⚡", "☁️", "🥗"], s: [10, 50, 30] },
+        { q: "🎬 갑자기 영화 속 주인공이 된다면 어떤 식당?", a: ["비 오는 날 골목길 시끌벅적 포장마차", "야경이 보이는 고층 레스토랑", "햇살이 들어오는 조용한 브런치 카페"], i: ["⛺", "🏙️", "🏡"], s: [10, 30, 50] },
+        { q: "🔋 현재 당신의 남은 체력(배고픔)은?", a: ["0%... 당장 씹을 것도 없이 삼키고 싶다", "50%... 맛있는 걸 찾아 나설 여력은 있다", "100%... 오늘 밤을 하얗게 불태울 거다"], i: ["🪫", "🔋", "🔥"], s: [50, 30, 10] },
+        { q: "🏆 오늘 하루 고생한 나에게 주는 상은?", a: ["목구멍을 때리는 시원한 탄산과 자극", "속을 달래주는 뜨끈하고 든든한 국물", "입에서 사르르 녹는 달콤하고 부드러운 맛"], i: ["🥤", "🍲", "🍰"], s: [10, 30, 50] },
+        { q: "💭 스트레스를 받을 때 당신의 대처법은?", a: ["매운 걸 먹으며 눈물 콧물 다 뺀다", "고기를 씹으며 스트레스도 같이 씹는다", "건강한 걸 먹으며 내 몸을 정화한다"], i: ["🌶️", "🍖", "🥑"], s: [10, 30, 50] },
+        { q: "⛅ 지금 창밖의 날씨와 어울리는 분위기는?", a: ["소주 한 잔이 생각나는 흐린 날", "시원한 맥주가 당기는 화창한 날", "와인 한 잔이 어울리는 선선한 저녁"], i: ["☔", "☀️", "🌙"], s: [10, 30, 50] },
+        { q: "🛋️ 식사 후 당신이 원하는 모습은?", a: ["배를 두드리며 소파와 물아일체", "기분 좋게 배불러서 산책하는 모습", "더부룩함 없이 가볍고 상쾌한 상태"], i: ["😴", "🚶", "✨"], s: [10, 30, 50] },
+        { q: "🧞 요정이 나타나 단 하나만 들어준다면?", a: ["무조건 양 많이! 가성비 최고!", "한 입을 먹더라도 환상적인 퀄리티", "먹어도 살 안 찌고 맛있는 기적의 음식"], i: ["🍚", "✨", "🧚"], s: [10, 30, 50] },
+        { q: "⚖️ 마지막, 오늘 저녁의 무게감은 어느 정도?", a: ["친구들과 왁자지껄 신나는 파티 메뉴", "조용히 음미하는 나만의 소울 푸드", "간단하게 뚝딱 해치우는 실용적인 한 끼"], i: ["🎉", "🎧", "🥪"], s: [10, 30, 50] }
+    ];
 
-        let currentIdx = 0;
-        let score = 0;
+    let idx = 0; let total = 0;
 
-        function loadQuestion() {
-            const qObj = questions[currentIdx];
+    function render() {
+        const qObj = questions[idx];
+        const card = document.getElementById('quiz-page');
+        
+        card.classList.remove('fade-in');
+        card.classList.add('fade-out');
+        
+        setTimeout(() => {
+            document.getElementById('step-info').innerText = `Q ${String(idx + 1).padStart(2, '0')}`;
+            document.getElementById('fill').style.width = ((idx + 1) / 10 * 100) + "%";
             document.getElementById('question').innerText = qObj.q;
-            document.getElementById('step-count').innerText = `질문 ${currentIdx + 1} / 10`;
-            document.getElementById('progress').style.width = ((currentIdx + 1) / 10 * 100) + "%";
             
-            const btnArea = document.getElementById('buttons');
-            btnArea.innerHTML = "";
+            const opts = document.getElementById('options');
+            opts.innerHTML = "";
             qObj.a.forEach((text, i) => {
-                const btn = document.createElement('button');
-                btn.innerText = text;
-                btn.onclick = () => next(qObj.s[i]);
-                btnArea.appendChild(btn);
+                const b = document.createElement('button');
+                b.className = 'opt-btn';
+                b.innerHTML = `<span class="opt-icon">${qObj.i[i]}</span><span>${text}</span>`;
+                b.onclick = () => { total += qObj.s[i]; next(); };
+                opts.appendChild(b);
             });
-        }
-
-        function next(s) {
-            score += s;
-            currentIdx++;
-            if(currentIdx < questions.length) {
-                loadQuestion();
-            } else {
-                showResult();
-            }
-        }
-
-        function showResult() {
-            document.getElementById('quiz-page').style.display = 'none';
-            document.getElementById('result-page').style.display = 'block';
             
-            const resName = document.getElementById('res-name');
-            const resDesc = document.getElementById('res-desc');
+            card.classList.remove('fade-out');
+            card.classList.add('fade-in');
+        }, 300);
+    }
 
-            if(score <= 150) {
-                resName.innerText = "선비형 예금 투자자";
-                resDesc.innerText = "안전이 제일! 주식보다는 적금이 마음 편한 분이시네요. 무리한 투자는 건강에 해롭습니다.";
-            } else if(score <= 250) {
-                resName.innerText = "공부하는 모범생 주주";
-                resDesc.innerText = "리스크를 관리하며 차근차근 수익을 쌓는 스타일입니다. 정석 투자의 길을 걷고 계시네요!";
-            } else if(score <= 350) {
-                resName.innerText = "여의도 차트 술사";
-                resDesc.innerText = "시장의 흐름을 즐기시는군요! 적당한 스릴과 수익을 동시에 챙기는 프로 투자자의 기질이 보입니다.";
-            } else if(score <= 450) {
-                resName.innerText = "불나방 하이리스커";
-                resDesc.innerText = "변동성이 큰 종목을 사랑하시는군요. 수익이 나면 대박이지만, 한 번의 실수로 위험할 수 있으니 주의!";
-            } else {
-                resName.innerText = "광기의 야수 임금님";
-                resDesc.innerText = "혹시 심장이 다이아몬드로 되어있나요? 하락장에서도 웃으며 추매하는 당신, 진정한 이 시대의 야수입니다.";
-            }
+    function next() {
+        idx++;
+        if(idx < questions.length) render();
+        else showResult();
+    }
+
+    function showResult() {
+        document.getElementById('quiz-page').style.display = 'none';
+        const resPage = document.getElementById('result-page');
+        resPage.style.display = 'block';
+        
+        const img = document.getElementById('res-img');
+        const title = document.getElementById('res-title');
+        const desc = document.getElementById('res-desc');
+        const tip = document.getElementById('menu-tip');
+
+        if(total <= 160) {
+            img.src = "https://images.unsplash.com/photo-1563379926898-05f4575a45d8?auto=format&fit=crop&w=400&q=80"; // 매운 파스타/음식 사진
+            title.innerText = "스트레스 파이터";
+            desc.innerText = "오늘 당신에겐 정신 번쩍 드는 화끈한 맛이 필요합니다. 땀을 뻘뻘 흘리며 먹다 보면 어느새 하루의 피로가 싹 날아갈 거예요.";
+            tip.innerText = "🔥 추천: 마라탕, 엽기떡볶이, 불닭";
+        } else if(total <= 260) {
+            img.src = "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80"; // 고기 바베큐 사진
+            title.innerText = "단백질 사냥꾼";
+            desc.innerText = "지친 몸과 마음에 기름칠을 해줄 때입니다. 입안 가득 퍼지는 육즙과 포만감이 당신을 다시 일으켜 세울 최고의 보약입니다.";
+            tip.innerText = "🥩 추천: 삼겹살, 스테이크, 치킨";
+        } else if(total <= 360) {
+            img.src = "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&w=400&q=80"; // 따뜻한 라면/국수 사진
+            title.innerText = "따뜻한 위로가 필요한 영혼";
+            desc.innerText = "자극적인 것보다는 속을 부드럽게 달래줄 음식이 당기는군요. 후루룩 넘어가는 면발과 깊은 국물 한 모금이 완벽한 힐링이 될 것입니다.";
+            tip.innerText = "🍜 추천: 돈코츠 라면, 쌀국수, 우동";
+        } else {
+            img.src = "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=400&q=80"; // 신선한 샐러드/포케 사진
+            title.innerText = "프레시 웰빙 요정";
+            desc.innerText = "내 몸을 소중히 여기는 당신! 더부룩한 식사 대신 가볍고 산뜻한 음식으로 하루를 상쾌하게 마무리하고 싶어 하는군요.";
+            tip.innerText = "🥗 추천: 연어 포케, 샐러드 파스타, 초밥";
         }
-
-        loadQuestion();
-    </script>
+    }
+    
+    // 시작!
+    render();
+</script>
 </body>
 </html>
