@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>S26 Ultra Real-time Stock</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #1c1c1e;
+            --text-main: #ffffff;
+            --text-sub: #8e8e93;
+            --up-color: #ff453a;
+            --down-color: #0a84ff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0; padding: 20px;
+        }
+
+        .header { margin-top: 40px; margin-bottom: 30px; }
+        .header h1 { font-size: 28px; margin: 0; }
+        #current-time { color: var(--text-sub); margin-top: 5px; font-size: 14px; }
+
+        .stock-card {
+            background-color: var(--card-bg);
+            border-radius: 20px; padding: 20px; margin-bottom: 16px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .name { font-size: 18px; font-weight: 600; display: block; }
+        .symbol { font-size: 14px; color: var(--text-sub); }
+        .price { font-size: 18px; font-weight: 700; display: block; text-align: right; }
+        .change { font-size: 14px; font-weight: 500; text-align: right; }
+        
+        .up { color: var(--up-color); }
+        .down { color: var(--down-color); }
+
+        .loading { font-size: 12px; color: var(--text-sub); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>실시간 와치리스트</h1>
+        <div id="current-time">데이터 업데이트 중...</div>
+    </div>
+
+    <div id="stock-list">
+        <div class="stock-card">데이터를 불러오는 중입니다...</div>
+    </div>
+
+    <script>
+        // 우리가 추적할 종목들 (삼성전자, 테슬라, 엔비디아, 비트코인)
+        const stocks = [
+            { name: '삼성전자', symbol: '005930.KS', currency: '₩' },
+            { name: '테슬라', symbol: 'TSLA', currency: '$' },
+            { name: '엔비디아', symbol: 'NVDA', currency: '$' },
+            { name: '비트코인', symbol: 'BTC-USD', currency: '$' }
+        ];
+
+        async function fetchStockData() {
+            const listContainer = document.getElementById('stock-list');
+            const timeContainer = document.getElementById('current-time');
+            
+            try {
+                // Yahoo Finance API를 우회해서 가져오는 공개 주소
+                const symbols = stocks.map(s => s.symbol).join(',');
+                const response = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}`);
+                const data = await response.json();
+                const quotes = data.quoteResponse.result;
+
+                listContainer.innerHTML = ''; // 로딩 문구 제거
+
+                quotes.forEach((quote, index) => {
+                    const price = quote.regularMarketPrice.toLocaleString();
+                    const change = quote.regularMarketChangePercent.toFixed(2);
+                    const isUp = change >= 0;
+                    const stockInfo = stocks.find(s => s.symbol === quote.symbol);
+
+                    const card = `
+                        <div class="stock-card">
+                            <div class="stock-info">
+                                <span class="name">${stockInfo.name}</span>
+                                <span class="symbol">${quote.symbol}</span>
+                            </div>
+                            <div class="stock-price">
+                                <span class="price">${stockInfo.currency}${price}</span>
+                                <span class="change ${isUp ? 'up' : 'down'}">
+                                    ${isUp ? '▲' : '▼'} ${Math.abs(change)}%
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                    listContainer.innerHTML += card;
+                });
+
+                timeContainer.innerText = `마지막 업데이트: ${new Date().toLocaleString()}`;
+            } catch (error) {
+                listContainer.innerHTML = '<div class="stock-card">데이터를 가져오는데 실패했습니다. 잠시 후 다시 시도하세요.</div>';
+            }
+        }
+
+        // 앱 실행 시 데이터 가져오기
+        fetchStockData();
+        // 30초마다 자동으로 새로고침 (실시간 느낌!)
+        setInterval(fetchStockData, 30000);
+    </script>
+</body>
+</html>
