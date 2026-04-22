@@ -2,79 +2,122 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S26 Ultra Stock</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주식 야수 지수 테스트</title>
     <style>
-        :root { --bg-color: #000000; --card-bg: #1c1c1e; --text-main: #ffffff; --text-sub: #8e8e93; --up-color: #ff453a; --down-color: #0a84ff; }
-        body { background-color: var(--bg-color); color: var(--text-main); font-family: -apple-system, sans-serif; margin: 0; padding: 20px; }
-        .header { margin-top: 40px; margin-bottom: 30px; }
-        .header h1 { font-size: 28px; margin: 0; }
-        #current-time { color: var(--text-sub); margin-top: 5px; font-size: 14px; }
-        .stock-card { background-color: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
-        .name { font-size: 18px; font-weight: 600; display: block; }
-        .symbol { font-size: 12px; color: var(--text-sub); }
-        .price { font-size: 18px; font-weight: 700; display: block; text-align: right; }
-        .change { font-size: 14px; font-weight: 500; }
-        .up { color: var(--up-color); }
-        .down { color: var(--down-color); }
+        :root { --primary: #4cd964; --bg: #0b0b0b; --card: #1c1c1e; --text: #ffffff; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 450px; background: var(--card); padding: 30px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+        
+        /* 상단 진행도 바 */
+        .progress-container { width: 100%; height: 6px; background: #333; border-radius: 10px; margin-bottom: 30px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); width: 10%; transition: 0.4s ease; }
+        .step-text { font-size: 13px; color: var(--primary); font-weight: bold; margin-bottom: 10px; display: block; }
+
+        h2 { font-size: 22px; line-height: 1.4; margin-bottom: 30px; min-height: 60px; }
+        
+        .btn-group button { 
+            display: block; width: 100%; padding: 18px; margin-bottom: 12px;
+            background: #2c2c2e; color: white; border: 1px solid #3a3a3c; border-radius: 15px; 
+            font-size: 16px; cursor: pointer; transition: 0.2s; text-align: left;
+        }
+        .btn-group button:hover { background: #3a3a3c; border-color: var(--primary); }
+        .btn-group button:active { transform: scale(0.98); background: var(--primary); color: black; }
+
+        #result-page { display: none; text-align: center; }
+        .result-title { font-size: 18px; color: #8e8e93; margin-bottom: 10px; }
+        .result-name { font-size: 32px; font-weight: 800; color: var(--primary); margin-bottom: 20px; }
+        .result-desc { line-height: 1.7; color: #d1d1d6; margin-bottom: 30px; word-break: keep-all; }
+        
+        .restart-btn { background: var(--primary); color: black; font-weight: bold; border: none; padding: 15px 30px; border-radius: 12px; cursor: pointer; width: 100%; font-size: 16px; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>실시간 와치리스트</h1>
-        <div id="current-time">연결 시도 중...</div>
+
+    <div class="container" id="quiz-page">
+        <span class="step-text" id="step-count">질문 1 / 10</span>
+        <div class="progress-container"><div class="progress-fill" id="progress"></div></div>
+        <h2 id="question">질문을 불러오는 중...</h2>
+        <div class="btn-group" id="buttons">
+            </div>
     </div>
-    <div id="stock-list">
-        <div class="stock-card">
-            <div><span class="name">서버 연결 중...</span><span class="symbol">잠시만 기다려주세요</span></div>
-            <div style="text-align:right"><span class="price">불러오는 중</span></div>
-        </div>
+
+    <div class="container" id="result-page">
+        <p class="result-title">나의 투자 성향은?</p>
+        <h1 class="result-name" id="res-name">분석 중...</h1>
+        <p class="result-desc" id="res-desc"></p>
+        <button class="restart-btn" onclick="location.reload()">다시 테스트하기</button>
     </div>
 
     <script>
-        const stocks = [
-            { name: '삼성전자', symbol: '005930.KS', cur: '₩' },
-            { name: '테슬라', symbol: 'TSLA', cur: '$' },
-            { name: '엔비디아', symbol: 'NVDA', cur: '$' },
-            { name: '비트코인', symbol: 'BTC-USD', cur: '$' }
+        const questions = [
+            { q: "내 통장에 여유자금 1,000만 원이 생겼다!", a: ["일단 예금에 넣고 고민한다", "삼전 같은 대량주를 조금 산다", "신성이엔지 등 유망주에 풀배팅한다"], s: [10, 30, 50] },
+            { q: "사자마자 주가가 -5% 하락했다. 나의 반응은?", a: ["밤에 잠이 안 온다", "이유를 찾아보며 차트를 본다", "바겐세일이다! 추매 가즈아"], s: [10, 30, 50] },
+            { q: "친구들이 '이거 무조건 간다'며 정보를 줬다.", a: ["무시하고 하던 거 한다", "소액만 재미로 사본다", "대출 영끌해서 일단 태운다"], s: [10, 30, 50] },
+            { q: "나의 주식 어플 확인 빈도는?", a: ["장 끝날 때 한 번 본다", "밥 먹을 때 한 번 본다", "눈 떠서 감을 때까지 본다"], s: [10, 30, 50] },
+            { q: "수익이 20% 났다. 이때 나는?", a: ["무서워서 일단 익절한다", "목표가까지 홀딩한다", "내 판단이 맞았다며 더 산다"], s: [10, 30, 50] },
+            { q: "뉴스에서 '경제 위기'라고 난리가 났다.", a: ["모든 주식을 팔고 현금화한다", "우량주 위주로 포트폴리오 변경", "위기는 기회! 인버스나 급등주 찾기"], s: [10, 30, 50] },
+            { q: "주식 관련 유튜브를 볼 때 나는?", a: ["워렌 버핏의 가치투자 강의", "차트 분석 및 기법 강의", "상한가 종목 맞추기 방송"], s: [10, 30, 50] },
+            { q: "로또 1등에 당첨된다면?", a: ["강남 아파트를 산다", "반은 예금, 반은 주식", "전액 주식으로 굴려 재벌을 꿈꾼다"], s: [10, 30, 50] },
+            { q: "내가 생각하는 주식이란?", a: ["차곡차곡 모으는 저축", "성장하는 기업에 대한 투자", "인생 한 방을 위한 승부처"], s: [10, 30, 50] },
+            { q: "상한가 간 종목을 놓쳤을 때 기분은?", a: ["내 거 아니네 하고 넘긴다", "아쉬워서 배가 아프다", "잠을 못 자고 다음 타자를 찾는다"], s: [10, 30, 50] }
         ];
 
-        async function fetchStockData() {
-            const list = document.getElementById('stock-list');
-            try {
-                const symbols = stocks.map(s => s.symbol).join(',');
-                // 이번에는 'allorigins' 대신 'api.codetabs.com'이라는 다른 우회 서버를 써보겠습니다.
-                const url = `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}`)}`;
-                
-                const res = await fetch(url);
-                const data = await res.json();
-                const quotes = data.quoteResponse.result;
+        let currentIdx = 0;
+        let score = 0;
 
-                if(!quotes) throw new Error('No data');
+        function loadQuestion() {
+            const qObj = questions[currentIdx];
+            document.getElementById('question').innerText = qObj.q;
+            document.getElementById('step-count').innerText = `질문 ${currentIdx + 1} / 10`;
+            document.getElementById('progress').style.width = ((currentIdx + 1) / 10 * 100) + "%";
+            
+            const btnArea = document.getElementById('buttons');
+            btnArea.innerHTML = "";
+            qObj.a.forEach((text, i) => {
+                const btn = document.createElement('button');
+                btn.innerText = text;
+                btn.onclick = () => next(qObj.s[i]);
+                btnArea.appendChild(btn);
+            });
+        }
 
-                list.innerHTML = '';
-                quotes.forEach(q => {
-                    const sInfo = stocks.find(s => s.symbol === q.symbol);
-                    const isUp = q.regularMarketChangePercent >= 0;
-                    list.innerHTML += `
-                        <div class="stock-card">
-                            <div><span class="name">${sInfo.name}</span><span class="symbol">${q.symbol}</span></div>
-                            <div style="text-align:right">
-                                <span class="price">${sInfo.cur}${q.regularMarketPrice.toLocaleString()}</span>
-                                <span class="change ${isUp ? 'up' : 'down'}">${isUp ? '▲' : '▼'}${Math.abs(q.regularMarketChangePercent).toFixed(2)}%</span>
-                            </div>
-                        </div>`;
-                });
-                document.getElementById('current-time').innerText = `최근 업데이트: ${new Date().toLocaleTimeString()}`;
-            } catch (e) {
-                console.log("재시도 중...");
-                // 실패해도 기존 리스트는 유지하거나 안내 문구만 살짝 변경
-                document.getElementById('current-time').innerText = "데이터 갱신 지연 (재시도 중...)";
+        function next(s) {
+            score += s;
+            currentIdx++;
+            if(currentIdx < questions.length) {
+                loadQuestion();
+            } else {
+                showResult();
             }
         }
 
-        fetchStockData();
-        setInterval(fetchStockData, 30000);
+        function showResult() {
+            document.getElementById('quiz-page').style.display = 'none';
+            document.getElementById('result-page').style.display = 'block';
+            
+            const resName = document.getElementById('res-name');
+            const resDesc = document.getElementById('res-desc');
+
+            if(score <= 150) {
+                resName.innerText = "선비형 예금 투자자";
+                resDesc.innerText = "안전이 제일! 주식보다는 적금이 마음 편한 분이시네요. 무리한 투자는 건강에 해롭습니다.";
+            } else if(score <= 250) {
+                resName.innerText = "공부하는 모범생 주주";
+                resDesc.innerText = "리스크를 관리하며 차근차근 수익을 쌓는 스타일입니다. 정석 투자의 길을 걷고 계시네요!";
+            } else if(score <= 350) {
+                resName.innerText = "여의도 차트 술사";
+                resDesc.innerText = "시장의 흐름을 즐기시는군요! 적당한 스릴과 수익을 동시에 챙기는 프로 투자자의 기질이 보입니다.";
+            } else if(score <= 450) {
+                resName.innerText = "불나방 하이리스커";
+                resDesc.innerText = "변동성이 큰 종목을 사랑하시는군요. 수익이 나면 대박이지만, 한 번의 실수로 위험할 수 있으니 주의!";
+            } else {
+                resName.innerText = "광기의 야수 임금님";
+                resDesc.innerText = "혹시 심장이 다이아몬드로 되어있나요? 하락장에서도 웃으며 추매하는 당신, 진정한 이 시대의 야수입니다.";
+            }
+        }
+
+        loadQuestion();
     </script>
 </body>
 </html>
